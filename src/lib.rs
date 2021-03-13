@@ -35,7 +35,8 @@ impl Coding {
     }
 
     pub fn encode<'a, S>(&self, src: S) -> Result<Vec<u8>, ConvertError>
-        where S: Into<Cow<'a, str>>
+    where
+        S: Into<Cow<'a, str>>,
     {
         match self.0 {
             Codings::ERS(c) => {
@@ -48,11 +49,9 @@ impl Coding {
                     Err(ConvertError::StringEncoding)
                 }
             }
-            Codings::OCC { encode: et, .. } => {
-                match oem_cp::encode_string_checked(src, et) {
-                    Some(out) => Ok(out),
-                    None => Err(ConvertError::StringEncoding),
-                }
+            Codings::OCC { encode: et, .. } => match oem_cp::encode_string_checked(src, et) {
+                Some(out) => Ok(out),
+                None => Err(ConvertError::StringEncoding),
             },
         }
     }
@@ -67,11 +66,9 @@ impl Coding {
                     Err(ConvertError::StringDecoding)
                 }
             }
-            Codings::OCC { decode: dt, .. } => {
-                match dt.decode_string_checked(src) {
-                    Some(s) => Ok(Cow::from(s)),
-                    None => Err(ConvertError::StringDecoding),
-                }
+            Codings::OCC { decode: dt, .. } => match dt.decode_string_checked(src) {
+                Some(s) => Ok(Cow::from(s)),
+                None => Err(ConvertError::StringDecoding),
             },
         }
     }
@@ -82,9 +79,7 @@ impl Coding {
                 let (out, _, _) = c.decode(src.as_ref());
                 out
             }
-            Codings::OCC { decode: dt, .. } => {
-                Cow::from(dt.decode_string_lossy(src))
-            }
+            Codings::OCC { decode: dt, .. } => Cow::from(dt.decode_string_lossy(src)),
         }
     }
 }
