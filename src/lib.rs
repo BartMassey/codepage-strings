@@ -180,7 +180,6 @@ impl Coding {
                 None => Err(ConvertError::StringDecoding),
             },
             Codings::Identity => {
-                let src = src.into();
                 match std::str::from_utf8(src) {
                     Ok(s) => Ok(Cow::from(s)),
                     Err(_) => Err(ConvertError::StringDecoding),
@@ -200,7 +199,6 @@ impl Coding {
             }
             Codings::OEMCP { decode: dt, .. } => Cow::from(dt.decode_string_lossy(src)),
             Codings::Identity => {
-                let src = src.into();
                 match std::str::from_utf8(src) {
                     Ok(s) => Cow::from(s),
                     Err(_) => String::from_utf8_lossy(src),
