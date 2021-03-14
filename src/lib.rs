@@ -8,17 +8,26 @@ according to
 Because Windows code pages are a legacy rathole, it is
 difficult to transcode strings using them. Sadly, there are
 still a lot of files out there that use these encodings.
-This crate was specifically created for use with [RIFF](), a
-file format that has code pages baked in for text
+This crate was specifically created for use with
+[RIFF](https://www.aelius.com/njh/wavemetatools/doc/riffmci.pdf),
+a file format that has code pages baked in for text
 internationalization.
 
 No effort has been made to deal with Windows code pages
 beyond those supported by `codepage` and `oem-cp`. If the
-codepage you need is missing, I suggest taking a look at
-adding it to `oem-cp`, which seems to be the main Rust
-repository for unusual Windows code page tables. I believe
-that most of the code pages supported by `iconv` are dealt
-with here, but I haven't checked carefully.
+single-byte codepage you need is missing, I suggest taking a
+look at adding it to `oem-cp`, which seems to be the main
+Rust repository for unusual Windows code page tables. I
+believe that most of the single-byte code pages supported by
+`iconv` are dealt with here, but I haven't checked
+carefully.
+
+Multibyte code pages are not (for now) currently supported —
+in particular code page 1200 (UTF-16LE) and code page 1201
+(UTF-16BE), but also various Asian languages. Code page
+65001 (UTF-8) is supported as an identity transformation.
+EBCDIC code pages are not supported and are low priority,
+because seriously?
 
 No particular effort has been put into performance. The
 interface allows `std::borrow::Cow` to some extent, but this
@@ -60,7 +69,8 @@ use std::borrow::Cow;
 pub enum ConvertError {
     StringEncoding,
     StringDecoding,
-    CodePage,
+    UnknownCodepage,
+    UnsupportedCodepage,
 }
 
 impl std::fmt::Display for ConvertError {
@@ -68,7 +78,8 @@ impl std::fmt::Display for ConvertError {
         let msg = match self {
             ConvertError::StringEncoding => "string codepage encoding error",
             ConvertError::StringDecoding => "string decoding error",
-            ConvertError::CodePage => "invalid / unknown Windows code page",
+            ConvertError::UnknownCodepage => "invalid / unknown Windows code page",
+            ConvertError::UnsupportedCodepage => "cannot transcode this Windows code page",
         };
         write!(f, "{}", msg)
     }
@@ -83,6 +94,7 @@ enum Codings {
         encode: &'static oem_cp::ahash::AHashMap<char, u8>,
         decode: &'static oem_cp::code_table_type::TableType,
     },
+    Identity,
 }
 
 #[derive(Debug, Clone)]
@@ -90,16 +102,20 @@ pub struct Coding(Codings);
 
 impl Coding {
     pub fn new(cp: u16) -> Result<Self, ConvertError> {
+        if cp == 65001 {
+            // UTF-8
+            return Ok(Coding(Codings::Identity));
+        }
         if let Some(c) = codepage::to_encoding(cp) {
             return Ok(Coding(Codings::ERS(c)));
         }
         let encode = match (*oem_cp::code_table::ENCODING_TABLE_CP_MAP).get(&cp) {
             Some(e) => e,
-            None => return Err(ConvertError::CodePage),
+            None => return Err(ConvertError::UnknownCodepage),
         };
         let decode = match (*oem_cp::code_table::DECODING_TABLE_CP_MAP).get(&cp) {
             Some(e) => e,
-            None => return Err(ConvertError::CodePage),
+            None => return Err(ConvertError::UnknownCodepage),
         };
         Ok(Coding(Codings::OEMCP { encode, decode }))
     }
@@ -119,10 +135,15 @@ impl Coding {
                     Ok(out.to_owned().to_vec())
                 }
             }
-            Codings::OEMCP { encode: et, .. } => match oem_cp::encode_string_checked(src, et) {
-                Some(out) => Ok(out),
-                None => Err(ConvertError::StringEncoding),
-            },
+            Codings::OEMCP { encode: et, .. } => {
+                match oem_cp::encode_string_checked(src, et) {
+                    Some(out) => Ok(out),
+                    None => Err(ConvertError::StringEncoding),
+                }
+            }
+            Codings::Identity => {
+                Ok(src.into().as_ref().as_bytes().to_vec())
+            }
         }
     }
 
@@ -136,10 +157,19 @@ impl Coding {
                     Ok(out)
                 }
             }
-            Codings::OEMCP { decode: dt, .. } => match dt.decode_string_checked(src) {
-                Some(s) => Ok(Cow::from(s)),
-                None => Err(ConvertError::StringDecoding),
-            },
+            Codings::OEMCP { decode: dt, .. } => {
+                match dt.decode_string_checked(src) {
+                    Some(s) => Ok(Cow::from(s)),
+                    None => Err(ConvertError::StringDecoding),
+                }
+            }
+            Codings::Identity => {
+                let src = src.into();
+                match std::str::from_utf8(src) {
+                    Ok(s) => Ok(Cow::from(s)),
+                    Err(_) => Err(ConvertError::StringDecoding),
+                }
+            }
         }
     }
 
@@ -149,7 +179,16 @@ impl Coding {
                 let (out, _, _) = c.decode(src.as_ref());
                 out
             }
-            Codings::OEMCP { decode: dt, .. } => Cow::from(dt.decode_string_lossy(src)),
+            Codings::OEMCP { decode: dt, .. } => {
+                Cow::from(dt.decode_string_lossy(src))
+            }
+            Codings::Identity => {
+                let src = src.into();
+                match std::str::from_utf8(src) {
+                    Ok(s) => Cow::from(s),
+                    Err(_) => String::from_utf8_lossy(src),
+                }
+            }
         }
     }
 }
