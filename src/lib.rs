@@ -112,11 +112,11 @@ impl Coding {
             Codings::ERS(c) => {
                 let src = src.into();
                 let oe = c.output_encoding();
-                let (out, _, ok) = oe.encode(src.as_ref());
-                if ok {
-                    Ok(out.to_owned().to_vec())
-                } else {
+                let (out, _, fail) = oe.encode(src.as_ref());
+                if fail {
                     Err(ConvertError::StringEncoding)
+                } else {
+                    Ok(out.to_owned().to_vec())
                 }
             }
             Codings::OCC { encode: et, .. } => match oem_cp::encode_string_checked(src, et) {
@@ -129,11 +129,11 @@ impl Coding {
     pub fn decode<'a>(&self, src: &'a [u8]) -> Result<Cow<'a, str>, ConvertError> {
         match self.0 {
             Codings::ERS(c) => {
-                let (out, _, ok) = c.decode(src.as_ref());
-                if ok {
-                    Ok(out)
-                } else {
+                let (out, _, fail) = c.decode(src.as_ref());
+                if fail {
                     Err(ConvertError::StringDecoding)
+                } else {
+                    Ok(out)
                 }
             }
             Codings::OCC { decode: dt, .. } => match dt.decode_string_checked(src) {
