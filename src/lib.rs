@@ -22,12 +22,12 @@ believe that most of the single-byte code pages supported by
 `iconv` are dealt with here, but I haven't checked
 carefully.
 
-Multibyte code pages are not (for now) currently supported —
-in particular code page 1200 (UTF-16LE) and code page 1201
-(UTF-16BE), but also various Asian languages. Code page
-65001 (UTF-8) is supported as an identity transformation.
-EBCDIC code pages are not supported and are low priority,
-because seriously?
+Other than UTF-16LE and UTF-16BE, multibyte Windows code
+pages are not (for now) currently supported — in particular
+various Asian languages. Code page 65001 (UTF-8) is
+supported as an identity transformation.  UTF-32LE and
+UTF32-BE are not supported. EBCDIC code pages and UTF-7 are
+not supported and are low priority, because seriously?
 
 No particular effort has been put into performance. The
 interface allows `std::borrow::Cow` to some extent, but this
@@ -92,6 +92,12 @@ impl std::fmt::Display for ConvertError {
 
 impl std::error::Error for ConvertError {}
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Endian {
+    LE,
+    BE,
+}
+
 #[derive(Debug, Clone)]
 enum Codings {
     ERS(&'static encoding_rs::Encoding),
@@ -100,6 +106,7 @@ enum Codings {
         decode: &'static oem_cp::code_table_type::TableType,
     },
     Identity,
+    UTF16(Endian),
 }
 
 /// Coding information derived from a Windows code page.
@@ -116,8 +123,16 @@ impl Coding {
             // UTF-8
             return Ok(Coding(Codings::Identity));
         }
-        if [1200, 1201, 12000, 12001, 65000].contains(&cp) {
-            // UTF-16 or weird UTF format.
+        if cp == 1200 {
+            // UTF-16LE
+            return Ok(Coding(Codings::UTF16(Endian::LE)));
+        }
+        if cp == 1201 {
+            // UTF-16BE
+            return Ok(Coding(Codings::UTF16(Endian::BE)));
+        }
+        if [12000, 12001, 65000].contains(&cp) {
+            // Weird UTF format (UTF-32LE, UTF-32BE, UTF-7).
             return Err(ConvertError::UnsupportedCodepage);
         }
         if let Some(c) = codepage::to_encoding(cp) {
@@ -158,6 +173,23 @@ impl Coding {
                 None => Err(ConvertError::StringEncoding),
             },
             Codings::Identity => Ok(src.into().as_ref().as_bytes().to_vec()),
+            Codings::UTF16(e) => {
+                let encoded = src
+                    .into()
+                    .as_ref()
+                    .encode_utf16()
+                    .flat_map(|w| {
+                        let lo = (w & 0xff) as u8;
+                        let hi = (w >> 8) as u8;
+                        let bs: Vec<u8> = match e {
+                            Endian::LE => vec![lo, hi],
+                            Endian::BE => vec![hi, lo],
+                        };
+                        bs.into_iter()
+                    })
+                    .collect();
+                Ok(encoded)
+            }
         }
     }
 
@@ -183,6 +215,25 @@ impl Coding {
                 Ok(s) => Ok(Cow::from(s)),
                 Err(_) => Err(ConvertError::StringDecoding),
             },
+            Codings::UTF16(e) => {
+                let ws = src
+                    .chunks(2)
+                    .map(|bs| {
+                        if bs.len() < 2 {
+                            return Err(ConvertError::StringDecoding);
+                        }
+                        let (hi, lo) = (bs[0] as u16, bs[1] as u16);
+                        match e {
+                            Endian::LE => Ok((lo << 8) | hi),
+                            Endian::BE => Ok((hi << 8) | lo),
+                        }
+                    })
+                    .collect::<Result<Vec<u16>, ConvertError>>()?;
+                match String::from_utf16(&ws) {
+                    Ok(s) => Ok(Cow::from(s)),
+                    Err(_) => Err(ConvertError::StringDecoding),
+                }
+            }
         }
     }
 
@@ -200,6 +251,25 @@ impl Coding {
                 Ok(s) => Cow::from(s),
                 Err(_) => String::from_utf8_lossy(src),
             },
+            Codings::UTF16(e) => {
+                let ws: Vec<u16> = src
+                    .chunks(2)
+                    .map(|bs| {
+                        let (hi, lo) = if bs.len() == 1 {
+                            // Unicode replacement character.
+                            (0xff, 0xfd)
+                        } else {
+                            // Big-endian by default.
+                            (bs[0] as u16, bs[1] as u16)
+                        };
+                        match e {
+                            Endian::LE => (lo << 8) | hi,
+                            Endian::BE => (hi << 8) | lo,
+                        }
+                    })
+                    .collect();
+                Cow::from(String::from_utf16_lossy(&ws))
+            }
         }
     }
 }
