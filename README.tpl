@@ -2,7 +2,7 @@
 
 
 # codepage-strings: encode / decode strings for Windows code pages
-Bart Massey 2021
+Bart Massey 2021 (version {{version}})
 
 {{readme}}
 

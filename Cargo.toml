@@ -21,3 +21,6 @@ encoding_rs = "0.8.28"
 git = "https://github.com/BartMassey/rust-oem-cp"
 branch = "dev"
 version = "1"
+
+[dev-dependencies]
+version-sync = "0.9"

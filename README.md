@@ -2,7 +2,7 @@
 
 
 # codepage-strings: encode / decode strings for Windows code pages
-Bart Massey 2021
+Bart Massey 2021 (version 0.1.0)
 
 This Rust crate builds on the excellent work of the
 `encoding_rs`, `codepage`, and `oem-cp` crates in an attempt
