@@ -153,15 +153,11 @@ impl Coding {
                     Ok(out.to_owned().to_vec())
                 }
             }
-            Codings::OEMCP { encode: et, .. } => {
-                match oem_cp::encode_string_checked(src, et) {
-                    Some(out) => Ok(out),
-                    None => Err(ConvertError::StringEncoding),
-                }
-            }
-            Codings::Identity => {
-                Ok(src.into().as_ref().as_bytes().to_vec())
-            }
+            Codings::OEMCP { encode: et, .. } => match oem_cp::encode_string_checked(src, et) {
+                Some(out) => Ok(out),
+                None => Err(ConvertError::StringEncoding),
+            },
+            Codings::Identity => Ok(src.into().as_ref().as_bytes().to_vec()),
         }
     }
 
@@ -179,12 +175,10 @@ impl Coding {
                     Ok(out)
                 }
             }
-            Codings::OEMCP { decode: dt, .. } => {
-                match dt.decode_string_checked(src) {
-                    Some(s) => Ok(Cow::from(s)),
-                    None => Err(ConvertError::StringDecoding),
-                }
-            }
+            Codings::OEMCP { decode: dt, .. } => match dt.decode_string_checked(src) {
+                Some(s) => Ok(Cow::from(s)),
+                None => Err(ConvertError::StringDecoding),
+            },
             Codings::Identity => {
                 let src = src.into();
                 match std::str::from_utf8(src) {
@@ -204,9 +198,7 @@ impl Coding {
                 let (out, _, _) = c.decode(src.as_ref());
                 out
             }
-            Codings::OEMCP { decode: dt, .. } => {
-                Cow::from(dt.decode_string_lossy(src))
-            }
+            Codings::OEMCP { decode: dt, .. } => Cow::from(dt.decode_string_lossy(src)),
             Codings::Identity => {
                 let src = src.into();
                 match std::str::from_utf8(src) {
