@@ -179,12 +179,10 @@ impl Coding {
                 Some(s) => Ok(Cow::from(s)),
                 None => Err(ConvertError::StringDecoding),
             },
-            Codings::Identity => {
-                match std::str::from_utf8(src) {
-                    Ok(s) => Ok(Cow::from(s)),
-                    Err(_) => Err(ConvertError::StringDecoding),
-                }
-            }
+            Codings::Identity => match std::str::from_utf8(src) {
+                Ok(s) => Ok(Cow::from(s)),
+                Err(_) => Err(ConvertError::StringDecoding),
+            },
         }
     }
 
@@ -198,12 +196,10 @@ impl Coding {
                 out
             }
             Codings::OEMCP { decode: dt, .. } => Cow::from(dt.decode_string_lossy(src)),
-            Codings::Identity => {
-                match std::str::from_utf8(src) {
-                    Ok(s) => Cow::from(s),
-                    Err(_) => String::from_utf8_lossy(src),
-                }
-            }
+            Codings::Identity => match std::str::from_utf8(src) {
+                Ok(s) => Cow::from(s),
+                Err(_) => String::from_utf8_lossy(src),
+            },
         }
     }
 }
