@@ -3,6 +3,12 @@ name = "codepage-strings"
 version = "0.1.0"
 authors = ["Bart Massey <bart.massey@gmail.com>"]
 edition = "2018"
+license = "MIT"
+repository = "https://github.com/BartMassey/codepage-strings"
+readme = "README.md"
+description = "encode / decode strings for Windows code pages"
+categories = ["internationalization", "text-processing"]
+publish = false
 
 [dependencies]
 codepage = "0.1.1"
