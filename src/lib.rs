@@ -96,7 +96,7 @@ impl std::error::Error for ConvertError {}
 enum Codings {
     ERS(&'static encoding_rs::Encoding),
     OEMCP {
-        encode: &'static oem_cp::ahash::AHashMap<char, u8>,
+        encode: &'static oem_cp::OEMCPHashMap<char, u8>,
         decode: &'static oem_cp::code_table_type::TableType,
     },
     Identity,
