@@ -79,7 +79,7 @@ impl std::error::Error for ConvertError {}
 #[derive(Debug, Clone)]
 enum Codings {
     ERS(&'static encoding_rs::Encoding),
-    OCC {
+    OEMCP {
         encode: &'static oem_cp::ahash::AHashMap<char, u8>,
         decode: &'static oem_cp::code_table_type::TableType,
     },
@@ -101,7 +101,7 @@ impl Coding {
             Some(e) => e,
             None => return Err(ConvertError::CodePage),
         };
-        Ok(Coding(Codings::OCC { encode, decode }))
+        Ok(Coding(Codings::OEMCP { encode, decode }))
     }
 
     pub fn encode<'a, S>(&self, src: S) -> Result<Vec<u8>, ConvertError>
@@ -119,7 +119,7 @@ impl Coding {
                     Ok(out.to_owned().to_vec())
                 }
             }
-            Codings::OCC { encode: et, .. } => match oem_cp::encode_string_checked(src, et) {
+            Codings::OEMCP { encode: et, .. } => match oem_cp::encode_string_checked(src, et) {
                 Some(out) => Ok(out),
                 None => Err(ConvertError::StringEncoding),
             },
@@ -136,7 +136,7 @@ impl Coding {
                     Ok(out)
                 }
             }
-            Codings::OCC { decode: dt, .. } => match dt.decode_string_checked(src) {
+            Codings::OEMCP { decode: dt, .. } => match dt.decode_string_checked(src) {
                 Some(s) => Ok(Cow::from(s)),
                 None => Err(ConvertError::StringDecoding),
             },
@@ -149,7 +149,7 @@ impl Coding {
                 let (out, _, _) = c.decode(src.as_ref());
                 out
             }
-            Codings::OCC { decode: dt, .. } => Cow::from(dt.decode_string_lossy(src)),
+            Codings::OEMCP { decode: dt, .. } => Cow::from(dt.decode_string_lossy(src)),
         }
     }
 }
