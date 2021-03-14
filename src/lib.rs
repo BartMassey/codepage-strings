@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/codepage-strings/0.1.0")]
+#![doc(html_root_url = "https://docs.rs/codepage-strings/1.0.0")]
 
 /*!
 This Rust crate builds on the excellent work of the
