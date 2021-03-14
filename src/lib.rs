@@ -41,14 +41,14 @@ Do some string conversions on Windows code page 869
 
 ```rust
 # use codepage_strings::*;
-
-let coding = Coding::new(869).unwrap();
+# fn main() -> Result<(), Box<dyn std::error::Error>> {
+let coding = Coding::new(869)?;
 assert_eq!(
-    coding.encode("αβ").unwrap(),
+    coding.encode("αβ")?,
     vec![214, 215],
 );
 assert_eq!(
-    coding.decode(&[214, 215]).unwrap(),
+    coding.decode(&[214, 215])?,
     "αβ",
 );
 assert_eq!(
@@ -59,6 +59,8 @@ assert_eq!(
     coding.decode(&[214, 147]),
     Err(ConvertError::StringDecoding),
 );
+# Ok(())
+# }
 ```
 */
 
