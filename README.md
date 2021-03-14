@@ -27,12 +27,12 @@ believe that most of the single-byte code pages supported by
 `iconv` are dealt with here, but I haven't checked
 carefully.
 
-Multibyte code pages are not (for now) currently supported —
-in particular code page 1200 (UTF-16LE) and code page 1201
-(UTF-16BE), but also various Asian languages. Code page
-65001 (UTF-8) is supported as an identity transformation.
-EBCDIC code pages are not supported and are low priority,
-because seriously?
+Other than UTF-16LE and UTF-16BE, multibyte Windows code
+pages are not (for now) currently supported — in particular
+various Asian languages. Code page 65001 (UTF-8) is
+supported as an identity transformation.  UTF-32LE and
+UTF32-BE are not supported. EBCDIC code pages and UTF-7 are
+not supported and are low priority, because seriously?
 
 No particular effort has been put into performance. The
 interface allows `std::borrow::Cow` to some extent, but this
@@ -45,14 +45,13 @@ Do some string conversions on Windows code page 869
 (alternate Greek).
 
 ```rust
-
-let coding = Coding::new(869).unwrap();
+let coding = Coding::new(869)?;
 assert_eq!(
-    coding.encode("αβ").unwrap(),
+    coding.encode("αβ")?,
     vec![214, 215],
 );
 assert_eq!(
-    coding.decode(&[214, 215]).unwrap(),
+    coding.decode(&[214, 215])?,
     "αβ",
 );
 assert_eq!(

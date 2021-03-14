@@ -116,8 +116,11 @@ enum Codings {
 pub struct Coding(Codings);
 
 impl Coding {
-    /// Get an encoding for the given code page. Will fail
-    /// with `ConvertError::UnknownCodepage` or
+    /// Get an encoding for the given code page.
+    ///
+    /// # Errors
+    ///
+    /// Will fail with `ConvertError::UnknownCodepage` or
     /// `ConvertError::UnsupportedCodepage` if an encoding
     /// for the given page is unavailable.
     pub fn new(cp: u16) -> Result<Self, ConvertError> {
@@ -152,9 +155,12 @@ impl Coding {
     }
 
     /// Encode a UTF-8 string into a byte vector according
-    /// to this encoding. Returns
-    /// `ConvertError::StringEncoding` if any character
-    /// cannot be encoded.
+    /// to this encoding.
+    ///
+    /// # Errors
+    ///
+    /// Returns `ConvertError::StringEncoding` if any
+    /// character cannot be encoded.
     pub fn encode<'a, S>(&self, src: S) -> Result<Vec<u8>, ConvertError>
     where
         S: Into<Cow<'a, str>>,
@@ -196,9 +202,12 @@ impl Coding {
     }
 
     /// Decode a byte vector into UTF-8 `Cow<str>` according
-    /// to this encoding. Returns
-    /// `ConvertError::StringDecoding` if any character
-    /// cannot be decoded.
+    /// to this encoding.
+    ///
+    /// # Errors
+    ///
+    /// Returns `ConvertError::StringDecoding` if any
+    /// character cannot be decoded.
     pub fn decode<'a>(&self, src: &'a [u8]) -> Result<Cow<'a, str>, ConvertError> {
         match self.0 {
             Codings::ERS(c) => {
@@ -241,7 +250,8 @@ impl Coding {
 
     /// Decode a byte vector into UTF-8 `Cow<str>` according
     /// to this encoding. Replace any bytes that cannot be
-    /// encoded with the Unicode "replacement character" (`\u{fffd}`).
+    /// encoded with the Unicode "replacement character"
+    /// (`\u{fffd}`).
     pub fn decode_lossy<'a>(&self, src: &'a [u8]) -> Cow<'a, str> {
         match self.0 {
             Codings::ERS(c) => {
