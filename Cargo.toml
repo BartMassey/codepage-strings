@@ -16,11 +16,7 @@ status = "actively-developed"
 [dependencies]
 codepage = "0.1.1"
 encoding_rs = "0.8.28"
-
-[dependencies.oem_cp]
-git = "https://github.com/BartMassey/rust-oem-cp"
-branch = "dev"
-version = "1"
+oem_cp = "1.1.0"
 
 [dev-dependencies]
 version-sync = "0.9"
