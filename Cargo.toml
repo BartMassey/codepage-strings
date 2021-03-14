@@ -10,6 +10,9 @@ description = "encode / decode strings for Windows code pages"
 categories = ["internationalization", "text-processing"]
 publish = false
 
+[badges.maintenance]
+status = "actively-developed"
+
 [dependencies]
 codepage = "0.1.1"
 encoding_rs = "0.8.28"

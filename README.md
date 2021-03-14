@@ -1,3 +1,6 @@
+![Maintenance](https://img.shields.io/badge/maintenance-activly--developed-brightgreen.svg) ![CI](https://github.com/BartMassey/codepage-strings/actions/workflows/main.yml/badge.svg)
+
+
 # codepage-strings: encode / decode strings for Windows code pages
 Bart Massey 2021
 
