@@ -116,6 +116,10 @@ impl Coding {
             // UTF-8
             return Ok(Coding(Codings::Identity));
         }
+        if [1200, 1201, 12000, 12001, 65000].contains(&cp) {
+            // UTF-16 or weird UTF format.
+            return Err(ConvertError::UnsupportedCodepage);
+        }
         if let Some(c) = codepage::to_encoding(cp) {
             return Ok(Coding(Codings::ERS(c)));
         }
