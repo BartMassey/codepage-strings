@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/codepage-strings/1.0.0")]
+#![doc(html_root_url = "https://docs.rs/codepage-strings/1.0.1")]
 
 /*!
 This Rust crate builds on the excellent work of the
@@ -68,6 +68,7 @@ assert_eq!(
 [`encoding_rs`]: http://crates.io/crates/encoding_rs
 [`codepage`]: http://crates.io/crates/codepage
 [`oem-cp`]: http://crates.io/crates/oem-cp
+[`std::borrow::Cow`]: https://doc.rust-lang.org/nightly/alloc/borrow/enum.Cow.html
 */
 
 use std::borrow::Cow;

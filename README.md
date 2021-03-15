@@ -4,10 +4,10 @@
 [![api-docs](https://docs.rs/codepage-strings/badge.svg)](https://docs.rs/codepage-strings)
 
 # codepage-strings: encode / decode strings for Windows code pages
-Bart Massey 2021 (version 1.0.0)
+Bart Massey 2021 (version 1.0.1)
 
 This Rust crate builds on the excellent work of the
-`encoding_rs`, `codepage`, and `oem-cp` crates in an attempt
+[`encoding_rs`], [`codepage`], and [`oem-cp`] crates in an attempt
 to provide idiomatic encoding and decoding of strings coded
 according to
 [Windows code pages](https://en.wikipedia.org/wiki/Windows_code_page).
@@ -21,9 +21,9 @@ a file format that has code pages baked in for text
 internationalization.
 
 No effort has been made to deal with Windows code pages
-beyond those supported by `codepage` and `oem-cp`. If the
+beyond those supported by [`codepage`] and [`oem-cp`]. If the
 single-byte codepage you need is missing, I suggest taking a
-look at adding it to `oem-cp`, which seems to be the main
+look at adding it to [`oem-cp`], which seems to be the main
 Rust repository for unusual Windows code page tables. I
 believe that most of the single-byte code pages supported by
 `iconv` are dealt with here, but I haven't checked
@@ -37,9 +37,9 @@ UTF32-BE are not supported. EBCDIC code pages and UTF-7 are
 not supported and are low priority, because seriously?
 
 No particular effort has been put into performance. The
-interface allows `std::borrow::Cow` to some extent, but this
+interface allows [`std::borrow::Cow`] to some extent, but this
 is limited by the minor impedance mismatches between
-`encoding_rs` and `oem-cp`.
+[`encoding_rs`] and [`oem-cp`].
 
 ## Examples
 
@@ -65,6 +65,11 @@ assert_eq!(
     Err(ConvertError::StringDecoding),
 );
 ```
+
+[`encoding_rs`]: http://crates.io/crates/encoding_rs
+[`codepage`]: http://crates.io/crates/codepage
+[`oem-cp`]: http://crates.io/crates/oem-cp
+[`std::borrow::Cow`]: https://doc.rust-lang.org/nightly/alloc/borrow/enum.Cow.html
 
 This crate is made available under the "MIT
 license". Please see the file `LICENSE` in this distribution
