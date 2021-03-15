@@ -2,7 +2,7 @@
 
 /*!
 This Rust crate builds on the excellent work of the
-`encoding_rs`, `codepage`, and `oem-cp` crates in an attempt
+[`encoding_rs`], [`codepage`], and [`oem-cp`] crates in an attempt
 to provide idiomatic encoding and decoding of strings coded
 according to
 [Windows code pages](https://en.wikipedia.org/wiki/Windows_code_page).
@@ -16,9 +16,9 @@ a file format that has code pages baked in for text
 internationalization.
 
 No effort has been made to deal with Windows code pages
-beyond those supported by `codepage` and `oem-cp`. If the
+beyond those supported by [`codepage`] and [`oem-cp`]. If the
 single-byte codepage you need is missing, I suggest taking a
-look at adding it to `oem-cp`, which seems to be the main
+look at adding it to [`oem-cp`], which seems to be the main
 Rust repository for unusual Windows code page tables. I
 believe that most of the single-byte code pages supported by
 `iconv` are dealt with here, but I haven't checked
@@ -32,9 +32,9 @@ UTF32-BE are not supported. EBCDIC code pages and UTF-7 are
 not supported and are low priority, because seriously?
 
 No particular effort has been put into performance. The
-interface allows `std::borrow::Cow` to some extent, but this
+interface allows [`std::borrow::Cow`] to some extent, but this
 is limited by the minor impedance mismatches between
-`encoding_rs` and `oem-cp`.
+[`encoding_rs`] and [`oem-cp`].
 
 # Examples
 
@@ -64,6 +64,10 @@ assert_eq!(
 # Ok(())
 # }
 ```
+
+[`encoding_rs`]: http://crates.io/crates/encoding_rs
+[`codepage`]: http://crates.io/crates/codepage
+[`oem-cp`]: http://crates.io/crates/oem-cp
 */
 
 use std::borrow::Cow;
@@ -122,8 +126,8 @@ impl Coding {
     ///
     /// # Errors
     ///
-    /// Will fail with `ConvertError::UnknownCodepage` or
-    /// `ConvertError::UnsupportedCodepage` if an encoding
+    /// Will fail with [`ConvertError::UnknownCodepage`] or
+    /// [`ConvertError::UnsupportedCodepage`] if an encoding
     /// for the given page is unavailable.
     pub fn new(cp: u16) -> Result<Self, ConvertError> {
         if cp == 65001 {
@@ -161,7 +165,7 @@ impl Coding {
     ///
     /// # Errors
     ///
-    /// Returns `ConvertError::StringEncoding` if any
+    /// Returns [`ConvertError::StringEncoding`] if any
     /// character cannot be encoded.
     pub fn encode<'a, S>(&self, src: S) -> Result<Vec<u8>, ConvertError>
     where
@@ -203,12 +207,12 @@ impl Coding {
         }
     }
 
-    /// Decode a byte vector into UTF-8 `Cow<str>` according
+    /// Decode a byte vector into UTF-8 [`Cow`]`<`[`str`]`>` according
     /// to this encoding.
     ///
     /// # Errors
     ///
-    /// Returns `ConvertError::StringDecoding` if any
+    /// Returns [`ConvertError::StringDecoding`] if any
     /// character cannot be decoded.
     pub fn decode<'a>(&self, src: &'a [u8]) -> Result<Cow<'a, str>, ConvertError> {
         match self.0 {
@@ -250,9 +254,10 @@ impl Coding {
         }
     }
 
-    /// Decode a byte vector into UTF-8 `Cow<str>` according
+    /// Decode a byte vector into UTF-8 [`Cow`]`<`[`str`]`>` according
     /// to this encoding. Replace any bytes that cannot be
-    /// encoded with the Unicode "replacement character"
+    /// encoded with the Unicode
+    /// "[replacement character](https://en.wikipedia.org/wiki/Specials_%28Unicode_block%29#Replacement_character)"
     /// (`\u{fffd}`).
     pub fn decode_lossy<'a>(&self, src: &'a [u8]) -> Cow<'a, str> {
         match self.0 {
