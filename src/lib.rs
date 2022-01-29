@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/codepage-strings/1.0.1")]
+#![doc(html_root_url = "https://docs.rs/codepage-strings/1.0.2")]
 
 /*!
 This Rust crate builds on the excellent work of the
@@ -28,7 +28,7 @@ Other than UTF-16LE and UTF-16BE, multibyte Windows code
 pages are not (for now) currently supported — in particular
 various Asian languages. Code page 65001 (UTF-8) is
 supported as an identity transformation.  UTF-32LE and
-UTF32-BE are not supported. EBCDIC code pages and UTF-7 are
+UTF32-Be are not supported. EBCDIC code pages and UTF-7 are
 not supported and are low priority, because seriously?
 
 No particular effort has been put into performance. The
@@ -103,14 +103,14 @@ impl std::error::Error for ConvertError {}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Endian {
-    LE,
-    BE,
+    Le,
+    Be,
 }
 
 #[derive(Debug, Clone)]
 enum Codings {
-    ERS(&'static encoding_rs::Encoding),
-    OEMCP {
+    Ers(&'static encoding_rs::Encoding),
+    OemCp {
         encode: &'static oem_cp::OEMCPHashMap<char, u8>,
         decode: &'static oem_cp::code_table_type::TableType,
     },
@@ -137,18 +137,18 @@ impl Coding {
         }
         if cp == 1200 {
             // UTF-16LE
-            return Ok(Coding(Codings::UTF16(Endian::LE)));
+            return Ok(Coding(Codings::UTF16(Endian::Le)));
         }
         if cp == 1201 {
             // UTF-16BE
-            return Ok(Coding(Codings::UTF16(Endian::BE)));
+            return Ok(Coding(Codings::UTF16(Endian::Be)));
         }
         if [12000, 12001, 65000].contains(&cp) {
             // Weird UTF format (UTF-32LE, UTF-32BE, UTF-7).
             return Err(ConvertError::UnsupportedCodepage);
         }
         if let Some(c) = codepage::to_encoding(cp) {
-            return Ok(Coding(Codings::ERS(c)));
+            return Ok(Coding(Codings::Ers(c)));
         }
         let encode = match (*oem_cp::code_table::ENCODING_TABLE_CP_MAP).get(&cp) {
             Some(e) => e,
@@ -158,7 +158,7 @@ impl Coding {
             Some(e) => e,
             None => return Err(ConvertError::UnknownCodepage),
         };
-        Ok(Coding(Codings::OEMCP { encode, decode }))
+        Ok(Coding(Codings::OemCp { encode, decode }))
     }
 
     /// Encode a UTF-8 string into a byte vector according
@@ -173,7 +173,7 @@ impl Coding {
         S: Into<Cow<'a, str>>,
     {
         match self.0 {
-            Codings::ERS(c) => {
+            Codings::Ers(c) => {
                 let src = src.into();
                 let oe = c.output_encoding();
                 let (out, _, fail) = oe.encode(src.as_ref());
@@ -183,7 +183,7 @@ impl Coding {
                     Ok(out.to_owned().to_vec())
                 }
             }
-            Codings::OEMCP { encode: et, .. } => match oem_cp::encode_string_checked(src, et) {
+            Codings::OemCp { encode: et, .. } => match oem_cp::encode_string_checked(src, et) {
                 Some(out) => Ok(out),
                 None => Err(ConvertError::StringEncoding),
             },
@@ -197,8 +197,8 @@ impl Coding {
                         let lo = (w & 0xff) as u8;
                         let hi = (w >> 8) as u8;
                         let bs: Vec<u8> = match e {
-                            Endian::LE => vec![lo, hi],
-                            Endian::BE => vec![hi, lo],
+                            Endian::Le => vec![lo, hi],
+                            Endian::Be => vec![hi, lo],
                         };
                         bs.into_iter()
                     })
@@ -217,7 +217,7 @@ impl Coding {
     /// character cannot be decoded.
     pub fn decode<'a>(&self, src: &'a [u8]) -> Result<Cow<'a, str>, ConvertError> {
         match self.0 {
-            Codings::ERS(c) => {
+            Codings::Ers(c) => {
                 let (out, _, fail) = c.decode(src.as_ref());
                 if fail {
                     Err(ConvertError::StringDecoding)
@@ -225,7 +225,7 @@ impl Coding {
                     Ok(out)
                 }
             }
-            Codings::OEMCP { decode: dt, .. } => match dt.decode_string_checked(src) {
+            Codings::OemCp { decode: dt, .. } => match dt.decode_string_checked(src) {
                 Some(s) => Ok(Cow::from(s)),
                 None => Err(ConvertError::StringDecoding),
             },
@@ -242,8 +242,8 @@ impl Coding {
                         }
                         let (hi, lo) = (bs[0] as u16, bs[1] as u16);
                         match e {
-                            Endian::LE => Ok((lo << 8) | hi),
-                            Endian::BE => Ok((hi << 8) | lo),
+                            Endian::Le => Ok((lo << 8) | hi),
+                            Endian::Be => Ok((hi << 8) | lo),
                         }
                     })
                     .collect::<Result<Vec<u16>, ConvertError>>()?;
@@ -262,11 +262,11 @@ impl Coding {
     /// (`\u{fffd}`).
     pub fn decode_lossy<'a>(&self, src: &'a [u8]) -> Cow<'a, str> {
         match self.0 {
-            Codings::ERS(c) => {
+            Codings::Ers(c) => {
                 let (out, _, _) = c.decode(src.as_ref());
                 out
             }
-            Codings::OEMCP { decode: dt, .. } => Cow::from(dt.decode_string_lossy(src)),
+            Codings::OemCp { decode: dt, .. } => Cow::from(dt.decode_string_lossy(src)),
             Codings::Identity => match std::str::from_utf8(src) {
                 Ok(s) => Cow::from(s),
                 Err(_) => String::from_utf8_lossy(src),
@@ -283,8 +283,8 @@ impl Coding {
                             (bs[0] as u16, bs[1] as u16)
                         };
                         match e {
-                            Endian::LE => (lo << 8) | hi,
-                            Endian::BE => (hi << 8) | lo,
+                            Endian::Le => (lo << 8) | hi,
+                            Endian::Be => (hi << 8) | lo,
                         }
                     })
                     .collect();

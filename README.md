@@ -5,7 +5,7 @@
 [![dependency status](https://deps.rs/repo/github/BartMassey/codepage-strings/status.svg)](https://deps.rs/repo/github/BartMassey/codepage-strings)
 
 # codepage-strings: encode / decode strings for Windows code pages
-Bart Massey 2021 (version 1.0.1)
+Bart Massey 2021 (version 1.0.2)
 
 This Rust crate builds on the excellent work of the
 [`encoding_rs`], [`codepage`], and [`oem-cp`] crates in an attempt
@@ -34,7 +34,7 @@ Other than UTF-16LE and UTF-16BE, multibyte Windows code
 pages are not (for now) currently supported — in particular
 various Asian languages. Code page 65001 (UTF-8) is
 supported as an identity transformation.  UTF-32LE and
-UTF32-BE are not supported. EBCDIC code pages and UTF-7 are
+UTF32-Be are not supported. EBCDIC code pages and UTF-7 are
 not supported and are low priority, because seriously?
 
 No particular effort has been put into performance. The
