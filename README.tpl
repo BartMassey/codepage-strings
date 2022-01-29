@@ -2,6 +2,7 @@
 [![CI](https://github.com/BartMassey/{{crate}}/actions/workflows/main.yml/badge.svg)](https://github.com/BartMassey/{{crate}}/actions)
 [![crates-io](https://img.shields.io/crates/v/{{crate}}.svg)](https://crates.io/crates/{{crate}})
 [![api-docs](https://docs.rs/{{crate}}/badge.svg)](https://docs.rs/{{crate}})
+[![dependency status](https://deps.rs/repo/github/BartMassey/codepage-strings/status.svg)](https://deps.rs/repo/github/BartMassey/codepage-strings)
 
 # {{crate}}: encode / decode strings for Windows code pages
 Bart Massey 2021 (version {{version}})
